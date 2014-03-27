@@ -3,7 +3,7 @@ puppet-jdk_oracle
 
 Puppet module to install a JDK from oracle using wget.
 
-[![Build Status](https://travis-ci.org/tylerwalts/puppet-jdk_oracle.png?branch=master)](https://travis-ci.org/tylerwalts/puppet-jdk_oracle)
+[![Build Status](https://travis-ci.org/burdara/puppet-jdk_oracle.png?branch=master)](https://travis-ci.org/burdara/puppet-jdk_oracle)
 
 Source: http://www.oracle.com/technetwork/java/javase/downloads/index.html
 
