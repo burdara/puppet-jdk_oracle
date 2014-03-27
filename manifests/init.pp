@@ -27,8 +27,8 @@ class jdk_oracle(
     $version      = hiera('jdk_oracle::version',     '7' ),
     $install_dir  = hiera('jdk_oracle::install_dir', '/opt' ),
     $use_cache    = hiera('jdk_oracle::use_cache',   false ),
-    $platform     = hiera('jdk_oracle::platform',   'x64' ),
-    ) {
+    $platform     = hiera('jdk_oracle::platform',    'x64' ),
+) {
 
     # Set default exec path for this module
     Exec { path    => ['/usr/bin', '/usr/sbin', '/bin'] }
@@ -110,46 +110,55 @@ class jdk_oracle(
     }
 
     # Set links depending on osfamily or operating system fact
+    file { "${install_dir}/java_home":
+        ensure  => link,
+        target  => $java_home,
+        require => Exec['extract_jdk'],
+    }
+    file { "${install_dir}/jdk-${version}":
+        ensure  => link,
+        target  => $java_home,
+        require => Exec['extract_jdk'],
+    }
     case $::osfamily {
-        RedHat, Linux: {
-            file { '/etc/alternatives/java':
-                ensure  => link,
-                target  => "${java_home}/bin/java",
+        RedHat: {
+            exec { ["/usr/sbin/alternatives --install /usr/bin/java java ${java_home}/bin/java 20000",
+                    "/usr/sbin/alternatives --install /usr/bin/javac javac ${java_home}/bin/java 20000"]:
                 require => Exec['extract_jdk'],
-            }
-            file { '/etc/alternatives/javac':
-                ensure  => link,
-                target  => "${java_home}/bin/javac",
-                require => Exec['extract_jdk'],
-            }
-            file { '/usr/sbin/java':
-                ensure  => link,
-                target  => '/etc/alternatives/java',
-                require => File['/etc/alternatives/java'],
-            }
-            file { '/usr/sbin/javac':
-                ensure  => link,
-                target  => '/etc/alternatives/javac',
-                require => File['/etc/alternatives/javac'],
-            }
-            file { "${install_dir}/java_home":
-                ensure  => link,
-                target  => $java_home,
-                require => Exec['extract_jdk'],
-            }
-            file { "${install_dir}/jdk-${version}":
-                ensure  => link,
-                target  => $java_home,
-                require => Exec['extract_jdk'],
+            } ->
+            exec { ["/usr/sbin/alternatives --set java ${java_home}/bin/java",
+                    "/usr/sbin/alternatives --set javac ${java_home}/bin/java"]:
+            } ->
+            file { 
+                '/usr/sbin/java':
+                    ensure  => link,
+                    target  => '/etc/alternatives/java';
+                '/usr/sbin/javac':
+                    ensure  => link,
+                    target  => '/etc/alternatives/javac';
             }
         }
-        Debian:    { fail('TODO: Implement me!') }
-        Suse:      { fail('TODO: Implement me!') }
-        Solaris:   { fail('TODO: Implement me!') }
-        Gentoo:    { fail('TODO: Implement me!') }
-        Archlinux: { fail('TODO: Implement me!') }
-        Mandrake:  { fail('TODO: Implement me!') }
+        Debian, Suse:    {
+            exec { ["/usr/sbin/update-alternatives --install /usr/bin/java java ${java_home}/bin/java 20000",
+                    "/usr/sbin/update-alternatives --install /usr/bin/javac javac ${java_home}/bin/javac 20000"]:
+                require => Exec['extract_jdk'],
+            } ->
+            exec { ["/usr/sbin/update-alternatives --set java ${java_home}/bin/java",
+                    "/usr/sbin/update-alternatives --set javac ${java_home}/bin/javac"]:
+            } ->
+            file { 
+                '/usr/sbin/java':
+                    ensure  => link,
+                    target  => '/etc/alternatives/java';
+                '/usr/sbin/javac':
+                    ensure  => link,
+                    target  => '/etc/alternatives/javac';
+            }
+        }
+        Solaris:   { fail('Not currently supported; please implement me!') }
+        Gentoo:    { fail('Not currently supported; please implement me!') }
+        Archlinux: { fail('Not currently supported; please implement me!') }
+        Mandrake:  { fail('Not currently supported: please implement me!') }
         default:     { fail('Unsupported OS') }
     }
-
 }
