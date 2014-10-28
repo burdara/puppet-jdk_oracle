@@ -23,7 +23,7 @@
 #   Defaults to <tt>x64</tt>.
 #
 #
-class jdk_oracle(
+define jdk_oracle(
     $version      = hiera('jdk_oracle::version',     '7' ),
     $install_dir  = hiera('jdk_oracle::install_dir', '/opt' ),
     $use_cache    = hiera('jdk_oracle::use_cache',   false ),
