@@ -24,10 +24,11 @@
 #
 #
 define jdk_oracle(
-    $version      = hiera('jdk_oracle::version',     '7' ),
-    $install_dir  = hiera('jdk_oracle::install_dir', '/opt' ),
-    $use_cache    = hiera('jdk_oracle::use_cache',   false ),
-    $platform     = hiera('jdk_oracle::platform',    'x64' ),
+    $version       = hiera('jdk_oracle::version',       '7' ),
+    $install_dir   = hiera('jdk_oracle::install_dir',   '/opt' ),
+    $use_cache     = hiera('jdk_oracle::use_cache',     false ),
+    $platform      = hiera('jdk_oracle::platform',      'x64' ),
+    $set_java_home = hiera('jdk_orable::set_java_home', false),
 ) {
 
     # Set default exec path for this module
@@ -110,11 +111,12 @@ define jdk_oracle(
     }
 
     # Set links depending on osfamily or operating system fact
-    file { "setup_java_home_${version}":
-        path    => "${install_dir}/java_home",
-        ensure  => link,
-        target  => $java_home,
-        require => Exec["extract_jdk_${version}"],
+    if ( $set_java_home ) {
+      file { "${install_dir}/java_home":
+          ensure  => link,
+          target  => $java_home,
+          require => Exec["extract_jdk_${version}"],
+      }
     }
     file { "${install_dir}/jdk-${version}":
         ensure  => link,
