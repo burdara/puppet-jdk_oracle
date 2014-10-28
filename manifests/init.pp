@@ -28,7 +28,7 @@ define jdk_oracle(
     $install_dir   = hiera('jdk_oracle::install_dir',   '/opt' ),
     $use_cache     = hiera('jdk_oracle::use_cache',     false ),
     $platform      = hiera('jdk_oracle::platform',      'x64' ),
-    $set_java_home = hiera('jdk_orable::set_java_home', false),
+    $is_primary    = hiera('jdk_orable::is_primary', false),
 ) {
 
     # Set default exec path for this module
@@ -111,7 +111,7 @@ define jdk_oracle(
     }
 
     # Set links depending on osfamily or operating system fact
-    if ( $set_java_home ) {
+    if ( $is_primary ) {
       file { "${install_dir}/java_home":
           ensure  => link,
           target  => $java_home,
@@ -123,6 +123,20 @@ define jdk_oracle(
         target  => $java_home,
         require => Exec["extract_jdk_${version}"],
     }
+
+    define setup_sbin_java($primary) {
+      if ( $primary ) {
+        file {
+            '/usr/sbin/java':
+                ensure  => link,
+                target  => '/etc/alternatives/java';
+            '/usr/sbin/javac':
+                ensure  => link,
+                target  => '/etc/alternatives/javac';
+        }
+      }
+    }
+
     case $::osfamily {
         RedHat: {
             exec { ["/usr/sbin/alternatives --install /usr/bin/java java ${java_home}/bin/java 20000",
@@ -132,15 +146,8 @@ define jdk_oracle(
             exec { ["/usr/sbin/alternatives --set java ${java_home}/bin/java",
                     "/usr/sbin/alternatives --set javac ${java_home}/bin/java"]:
             } ->
-            file {
-                "sbin_java_${version}":
-                    path    => '/usr/sbin/java',
-                    ensure  => link,
-                    target  => '/etc/alternatives/java';
-                "sbin_javac_${version}":
-                    path    => '/usr/sbin/javac',
-                    ensure  => link,
-                    target  => '/etc/alternatives/javac';
+            setup_sbin_java { "sbin_${version}":
+              primary => $is_primary
             }
         }
         Debian, Suse:    {
@@ -151,15 +158,8 @@ define jdk_oracle(
             exec { ["/usr/sbin/update-alternatives --set java ${java_home}/bin/java",
                     "/usr/sbin/update-alternatives --set javac ${java_home}/bin/javac"]:
             } ->
-            file {
-                "sbin_java_${version}":
-                    path    => '/usr/sbin/java',
-                    ensure  => link,
-                    target  => '/etc/alternatives/java';
-                "sbin_javac_${version}":
-                    path    => '/usr/sbin/javac',
-                    ensure  => link,
-                    target  => '/etc/alternatives/javac';
+            setup_sbin_java { "sbin_${version}":
+              primary => $is_primary
             }
         }
         Solaris:   { fail('Not currently supported; please implement me!') }
