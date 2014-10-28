@@ -123,43 +123,43 @@ define jdk_oracle(
         target  => $java_home,
         require => Exec["extract_jdk_${version}"],
     }
-
-    define setup_sbin_java($primary) {
-      if ( $primary ) {
-        file {
-            '/usr/sbin/java':
-                ensure  => link,
-                target  => '/etc/alternatives/java';
-            '/usr/sbin/javac':
-                ensure  => link,
-                target  => '/etc/alternatives/javac';
-        }
-      }
-    }
-
     case $::osfamily {
         RedHat: {
-            exec { ["/usr/sbin/alternatives --install /usr/bin/java java ${java_home}/bin/java 20000",
-                    "/usr/sbin/alternatives --install /usr/bin/javac javac ${java_home}/bin/java 20000"]:
-                require => Exec["extract_jdk_${version}"],
-            } ->
-            exec { ["/usr/sbin/alternatives --set java ${java_home}/bin/java",
-                    "/usr/sbin/alternatives --set javac ${java_home}/bin/java"]:
-            } ->
-            setup_sbin_java { "sbin_${version}":
-              primary => $is_primary
+            if ( $is_primary ) {
+              exec { ["/usr/sbin/alternatives --install /usr/bin/java java ${java_home}/bin/java 20000",
+                      "/usr/sbin/alternatives --install /usr/bin/javac javac ${java_home}/bin/java 20000"]:
+                  require => Exec["extract_jdk_${version}"],
+              } ->
+              exec { ["/usr/sbin/alternatives --set java ${java_home}/bin/java",
+                      "/usr/sbin/alternatives --set javac ${java_home}/bin/java"]:
+              } ->
+              file {
+                  '/usr/sbin/java':
+                      ensure  => link,
+                      target  => '/etc/alternatives/java';
+                  '/usr/sbin/javac':
+                      ensure  => link,
+                      target  => '/etc/alternatives/javac';
+              }
             }
         }
         Debian, Suse:    {
-            exec { ["/usr/sbin/update-alternatives --install /usr/bin/java java ${java_home}/bin/java 20000",
-                    "/usr/sbin/update-alternatives --install /usr/bin/javac javac ${java_home}/bin/javac 20000"]:
-                require => Exec["extract_jdk_${version}"],
-            } ->
-            exec { ["/usr/sbin/update-alternatives --set java ${java_home}/bin/java",
-                    "/usr/sbin/update-alternatives --set javac ${java_home}/bin/javac"]:
-            } ->
-            setup_sbin_java { "sbin_${version}":
-              primary => $is_primary
+            if ( $is_primary ) {
+              exec { ["/usr/sbin/update-alternatives --install /usr/bin/java java ${java_home}/bin/java 20000",
+                      "/usr/sbin/update-alternatives --install /usr/bin/javac javac ${java_home}/bin/javac 20000"]:
+                  require => Exec["extract_jdk_${version}"],
+              } ->
+              exec { ["/usr/sbin/update-alternatives --set java ${java_home}/bin/java",
+                      "/usr/sbin/update-alternatives --set javac ${java_home}/bin/javac"]:
+              } ->
+              file {
+                  '/usr/sbin/java':
+                      ensure  => link,
+                      target  => '/etc/alternatives/java';
+                  '/usr/sbin/javac':
+                      ensure  => link,
+                      target  => '/etc/alternatives/javac';
+              }
             }
         }
         Solaris:   { fail('Not currently supported; please implement me!') }
