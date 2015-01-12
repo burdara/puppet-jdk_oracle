@@ -8,27 +8,27 @@
 #   String.  Java Version to install
 #   Defaults to <tt>7</tt>.
 #
-# [* java_install_dir *]
+# [*java_install_dir*]
 #   String.  Java Installation Directory
 #   Defaults to <tt>/opt</tt>.
 #
-# [* use_cache *]
+# [*use_cache*]
 #   String.  Optionally host the installer file locally instead of fetching it each time (for faster dev & test)
 #   The puppet cache flag is for faster local vagrant development, to
 #   locally host the tarball from oracle instead of fetching it each time.
 #   Defaults to <tt>false</tt>.
 #
-# [* platform *]
+# [*platform*]
 #   String.  The platform to use
 #   Defaults to <tt>x64</tt>.
 #
 #
 define jdk_oracle(
-    $version       = hiera('jdk_oracle::version',       '7' ),
-    $install_dir   = hiera('jdk_oracle::install_dir',   '/opt' ),
-    $use_cache     = hiera('jdk_oracle::use_cache',     false ),
-    $platform      = hiera('jdk_oracle::platform',      'x64' ),
-    $is_primary    = hiera('jdk_orable::is_primary', false),
+    $version       = hiera('jdk_oracle::version',     '7' ),
+    $install_dir   = hiera('jdk_oracle::install_dir', '/opt' ),
+    $use_cache     = hiera('jdk_oracle::use_cache',   false ),
+    $platform      = hiera('jdk_oracle::platform',    'x64' ),
+    $is_primary    = hiera('jdk_orable::is_primary',  false),
 ) {
 
     # Set default exec path for this module
@@ -124,8 +124,8 @@ define jdk_oracle(
         require => Exec["extract_jdk_${version}"],
     }
     case $::osfamily {
-        RedHat: {
-            if ( $is_primary ) {
+        'RedHat': {
+            if $is_primary {
               exec { ["/usr/sbin/alternatives --install /usr/bin/java java ${java_home}/bin/java 20000",
                       "/usr/sbin/alternatives --install /usr/bin/javac javac ${java_home}/bin/java 20000"]:
                   require => Exec["extract_jdk_${version}"],
@@ -143,8 +143,8 @@ define jdk_oracle(
               }
             }
         }
-        Debian, Suse:    {
-            if ( $is_primary ) {
+        'Debian', 'Suse': {
+            if $is_primary {
               exec { ["/usr/sbin/update-alternatives --install /usr/bin/java java ${java_home}/bin/java 20000",
                       "/usr/sbin/update-alternatives --install /usr/bin/javac javac ${java_home}/bin/javac 20000"]:
                   require => Exec["extract_jdk_${version}"],
@@ -162,10 +162,10 @@ define jdk_oracle(
               }
             }
         }
-        Solaris:   { fail('Not currently supported; please implement me!') }
-        Gentoo:    { fail('Not currently supported; please implement me!') }
-        Archlinux: { fail('Not currently supported; please implement me!') }
-        Mandrake:  { fail('Not currently supported: please implement me!') }
-        default:     { fail('Unsupported OS') }
+        'Solaris': { fail('Not currently supported; please implement me!') }
+        'Gentoo': { fail('Not currently supported; please implement me!') }
+        'Archlinux': { fail('Not currently supported; please implement me!') }
+        'Mandrake': { fail('Not currently supported: please implement me!') }
+        default: { fail('Unsupported OS') }
     }
 }
